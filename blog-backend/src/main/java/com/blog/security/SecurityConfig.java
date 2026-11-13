@@ -3,6 +3,7 @@ package com.blog.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -38,8 +39,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/api/articles/**").permitAll()
-                .requestMatchers("/api/categories/**").permitAll()
-                .requestMatchers("/api/tags/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/tags/**").permitAll()
+                .requestMatchers("/api/categories/**", "/api/tags/**").authenticated()
                 .requestMatchers("/api/admin/**").authenticated()
                 .anyRequest().authenticated()
             )
