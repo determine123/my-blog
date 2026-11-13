@@ -1,6 +1,7 @@
 package com.blog.config;
 
 import com.blog.dto.ApiResponse;
+import com.blog.exception.ArticleNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,6 +13,12 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ArticleNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleArticleNotFound(ArticleNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntime(RuntimeException e) {

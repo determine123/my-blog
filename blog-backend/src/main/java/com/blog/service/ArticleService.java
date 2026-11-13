@@ -5,6 +5,7 @@ import com.blog.entity.Article;
 import com.blog.entity.Category;
 import com.blog.entity.Tag;
 import com.blog.entity.User;
+import com.blog.exception.ArticleNotFoundException;
 import com.blog.repository.ArticleRepository;
 import com.blog.repository.CategoryRepository;
 import com.blog.repository.TagRepository;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ArticleService {
 
+    private static final String PUBLISHED_STATUS = "PUBLISHED";
+
     private final ArticleRepository articleRepository;
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
@@ -36,30 +39,30 @@ public class ArticleService {
         Page<Article> articles;
 
         if (keyword != null && !keyword.isBlank()) {
-            articles = articleRepository.search(keyword, "PUBLISHED", pageRequest);
+            articles = articleRepository.search(keyword, PUBLISHED_STATUS, pageRequest);
         } else if (categoryId != null) {
-            articles = articleRepository.findByCategoryIdAndStatus(categoryId, "PUBLISHED", pageRequest);
+            articles = articleRepository.findByCategoryIdAndStatus(categoryId, PUBLISHED_STATUS, pageRequest);
         } else if (tagId != null) {
-            articles = articleRepository.findByTagIdAndStatus(tagId, "PUBLISHED", pageRequest);
+            articles = articleRepository.findByTagIdAndStatus(tagId, PUBLISHED_STATUS, pageRequest);
         } else {
-            articles = articleRepository.findByStatus("PUBLISHED", pageRequest);
+            articles = articleRepository.findByStatus(PUBLISHED_STATUS, pageRequest);
         }
 
         return articles.map(this::toDTO);
     }
 
     @Transactional(readOnly = true)
-    public ArticleDTO getArticleBySlug(String slug) {
+    public ArticleDTO getArticleBySlug(String slug, String viewerUsername) {
         Article article = articleRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
-        return toDTO(article);
+                .orElseThrow(ArticleNotFoundException::new);
+        return toVisibleDTO(article, viewerUsername);
     }
 
     @Transactional(readOnly = true)
-    public ArticleDTO getArticleById(Long id) {
+    public ArticleDTO getArticleById(Long id, String viewerUsername) {
         Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
-        return toDTO(article);
+                .orElseThrow(ArticleNotFoundException::new);
+        return toVisibleDTO(article, viewerUsername);
     }
 
     @Transactional
@@ -159,6 +162,18 @@ public class ArticleService {
                 .replaceAll("[^a-z0-9\\u4e00-\\u9fa5]+", "-")
                 .replaceAll("^-|-$", "");
         return slug + "-" + System.currentTimeMillis();
+    }
+
+    private ArticleDTO toVisibleDTO(Article article, String viewerUsername) {
+        boolean isPublished = PUBLISHED_STATUS.equals(article.getStatus());
+        boolean isAuthor = viewerUsername != null
+                && article.getAuthor().getUsername().equals(viewerUsername);
+
+        if (!isPublished && !isAuthor) {
+            throw new ArticleNotFoundException();
+        }
+
+        return toDTO(article);
     }
 
     private ArticleDTO toDTO(Article article) {

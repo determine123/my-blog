@@ -28,12 +28,14 @@ public class ArticleController {
     }
 
     @GetMapping("/articles/{slugOrId}")
-    public ApiResponse<ArticleDTO> getArticle(@PathVariable String slugOrId) {
+    public ApiResponse<ArticleDTO> getArticle(@PathVariable String slugOrId,
+                                              Authentication authentication) {
+        String viewerUsername = authentication != null ? authentication.getName() : null;
         try {
             Long id = Long.parseLong(slugOrId);
-            return ApiResponse.ok(articleService.getArticleById(id));
+            return ApiResponse.ok(articleService.getArticleById(id, viewerUsername));
         } catch (NumberFormatException e) {
-            return ApiResponse.ok(articleService.getArticleBySlug(slugOrId));
+            return ApiResponse.ok(articleService.getArticleBySlug(slugOrId, viewerUsername));
         }
     }
 
