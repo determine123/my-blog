@@ -9,6 +9,7 @@ InkSpace is a personal blog built with a Next.js frontend and a Spring Boot/Post
 - The author can preview their own `DRAFT` article by sending a valid `Authorization: Bearer <token>` header.
 - Drafts are hidden from anonymous readers and other authenticated users with an HTTP `404` response, so the API does not reveal whether a draft exists.
 - Categories and tags are publicly readable, but creating either resource requires a valid bearer token.
+- Allowed browser origins are configured with the comma-separated CORS_ALLOWED_ORIGINS environment variable. The default includes local development and the deployed Vercel origin.
 
 ## Local verification
 
